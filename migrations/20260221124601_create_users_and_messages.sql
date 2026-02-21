@@ -1,33 +1,30 @@
 -- +goose Up
 -- +goose StatementBegin
-SELECT 'up SQL query';
-CREATE TABLE Users (
+CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY,
-    login Text not null,
-    name Text,
-    hashed_password Text not null,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) IF NOT EXISTS;
-
-CREATE TABLE Messages (
-    id UUID PRIMARY KEY,
-    sender_id UUID,
-    receiver_id UUID,
-    message_content Text,
+    login TEXT NOT NULL UNIQUE,
+    name TEXT,
+    hashed_password TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX sender_index on Messages (sender_id);
-CREATE INDEX receiver_index on Messages (receiver_id);
-CREATE INDEX sender_receiver_index on Messages (sender_id, receiver_id);
+CREATE TABLE IF NOT EXISTS messages (
+    id UUID PRIMARY KEY,
+    sender_id UUID NOT NULL REFERENCES users(id),
+    receiver_id UUID NOT NULL REFERENCES users(id),
+    message_content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_messages_sender ON messages (sender_id);
+CREATE INDEX idx_messages_receiver ON messages (receiver_id);
+CREATE INDEX idx_messages_sender_receiver ON messages (sender_id, receiver_id);
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE Users;
-DROP TABLE Messages;
-DROP INDEX sender_index;
-DROP INDEX receiver_index;
+DROP TABLE IF EXISTS messages;
+DROP TABLE IF EXISTS users;
 -- +goose StatementEnd
