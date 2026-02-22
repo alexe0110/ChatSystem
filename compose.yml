@@ -1,0 +1,16 @@
+x-pg-envs:
+  &pg_envs
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  POSTGRES_DB: chat_db
+  POSTGRES_HOST: postgres
+  POSTGRES_PORT: 5432
+
+
+services:
+  postgres:
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    environment:
+      <<: *pg_envs
