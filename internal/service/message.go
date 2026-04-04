@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+
 	"github.com/alexe0110/chat-system/internal/model"
 	"github.com/alexe0110/chat-system/internal/repository"
 	"github.com/google/uuid"
