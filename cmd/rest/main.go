@@ -44,6 +44,6 @@ func main() {
 	messageRouter.GET("/conversation", messageHandler.GetConversation)
 	messageRouter.GET("/:id", messageHandler.GetByID)
 
-	router.Run(":8080")
+	_ = router.Run(":8080")
 
 }

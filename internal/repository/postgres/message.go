@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+
 	"github.com/alexe0110/chat-system/internal/model"
 	"github.com/google/uuid"
 )

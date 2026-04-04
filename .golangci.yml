@@ -1,0 +1,59 @@
+run:
+  timeout: 3m          # для больших проектов
+
+linters:
+  # отключаем всё, включаем явно
+  disable-all: true
+  enable:
+    # 🔒 баги и ошибки
+    - errcheck          # не игнорируй ошибки
+    - govet             # встроенный анализатор (как go vet)
+    - staticcheck       # мощный статический анализ
+    - typecheck         # ошибки типизации
+
+    # 🧹 стиль и чистота
+    - gofmt             # форматирование
+    - goimports         # сортировка импортов
+    - revive            # замена устаревшего golint
+    - unconvert         # лишние приведения типов
+    - unparam           # неиспользуемые параметры
+
+    # 🐛 частые баги
+    - bodyclose         # незакрытые http.Response.Body
+    - nilerr            # return nil когда err != nil
+    - copyloopvar     # захват переменной цикла в горутине
+
+    # 📏 сложность
+    - gocyclo           # цикломатическая сложность
+    - funlen            # длина функций
+
+    # 🔧 прочее
+    - gosimple          # упрощение кода
+    - unused            # неиспользуемый код
+    - ineffassign       # бесполезные присваивания
+    - misspell          # опечатки в комментариях/строках
+
+linters-settings:
+  gocyclo:
+    min-complexity: 15  # порог сложности
+
+  funlen:
+    lines: 80           # макс строк в функции
+    statements: 50      # макс выражений
+
+  revive:
+    rules:
+      - name: exported
+        disabled: true  # не требовать комменты к каждому экспорту (на старте)
+
+issues:
+  # не скрывать повторяющиеся ошибки
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+  exclude-rules:
+    # в тестах можно длинные функции
+    - path: _test\.go
+      linters:
+        - funlen
+        - gocyclo

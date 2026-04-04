@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+
 	"github.com/alexe0110/chat-system/internal/model"
 	"github.com/google/uuid"
 )

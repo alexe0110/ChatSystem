@@ -19,6 +19,11 @@ go build ./cmd/rest/main.go
 go run main.go
 ```
 
+Линтеры и форматеры
+```bash
+golangci-lint run --fix ./...
+```
+
 
 Создание новой миграции
 ```bash
