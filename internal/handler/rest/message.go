@@ -2,19 +2,24 @@ package rest
 
 import (
 	"net/http"
+	"time"
 
+	"github.com/alexe0110/chat-system/internal/model"
 	"github.com/alexe0110/chat-system/internal/service"
+	"github.com/alexe0110/chat-system/internal/worker"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
 type MessageHandler struct {
 	service *service.MessageService
+	worker  *worker.NotificationWorker
 }
 
-func NewMessageHandler(messageService *service.MessageService) *MessageHandler {
+func NewMessageHandler(messageService *service.MessageService, worker *worker.NotificationWorker) *MessageHandler {
 	return &MessageHandler{
 		messageService,
+		worker,
 	}
 }
 
@@ -39,6 +44,13 @@ func (handler *MessageHandler) SendMessage(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	handler.worker.Send(model.Notification{
+		SenderID:   req.SenderID,
+		ReceiverID: req.ReceiverID,
+		Content:    req.MessageContent,
+		CreatedAt:  time.Now(),
+	})
 
 	c.JSON(http.StatusCreated, msg)
 

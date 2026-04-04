@@ -8,6 +8,7 @@ import (
 	"github.com/alexe0110/chat-system/internal/middleware"
 	"github.com/alexe0110/chat-system/internal/repository/postgres"
 	"github.com/alexe0110/chat-system/internal/service"
+	"github.com/alexe0110/chat-system/internal/worker"
 	"github.com/gin-gonic/gin"
 
 	_ "github.com/lib/pq"
@@ -22,6 +23,9 @@ func main() {
 	}
 	defer db.Close()
 
+	notificationWorker := worker.NewNotificationWorker(5)
+	notificationWorker.Start()
+
 	userRepo := postgres.NewUserRepository(db)
 	messageRepo := postgres.NewMessageRepository(db)
 
@@ -29,7 +33,7 @@ func main() {
 	messageService := service.NewMessageService(messageRepo)
 
 	userHandler := restHandler.NewUserHandler(userService, secret)
-	messageHandler := restHandler.NewMessageHandler(messageService)
+	messageHandler := restHandler.NewMessageHandler(messageService, notificationWorker)
 
 	router := gin.Default()
 
