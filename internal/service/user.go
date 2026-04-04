@@ -2,8 +2,10 @@ package service
 
 import (
 	"context"
+
 	"github.com/alexe0110/chat-system/internal/model"
 	"github.com/alexe0110/chat-system/internal/repository"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -41,4 +43,8 @@ func (r *UserService) Login(ctx context.Context, login, password string) (*model
 	}
 
 	return user, nil
+}
+
+func (r *UserService) GetByID(ctx context.Context, id uuid.UUID) (*model.User, error) {
+	return r.repo.GetByID(ctx, id)
 }
