@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"log"
+	"os"
 
 	restHandler "github.com/alexe0110/chat-system/internal/handler/rest"
 	"github.com/alexe0110/chat-system/internal/middleware"
@@ -17,7 +18,12 @@ import (
 func main() {
 	const secret = "qwerty"
 
-	db, err := sql.Open("postgres", "postgresql://postgres:postgres@localhost:5432/chat_db?sslmode=disable")
+	pgDSN := os.Getenv("DATABASE_URL")
+	if pgDSN == "" {
+		log.Fatal("DATABASE_URL is not set")
+	}
+
+	db, err := sql.Open("postgres", pgDSN)
 	if err != nil {
 		log.Fatal(err)
 	}
