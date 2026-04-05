@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package chat;
+
+option go_package = "github.com/alexe0110/chat-system/pb";
+
+message GetUserRequest {
+  string id = 1;
+}
+
+message GetUserResponse {
+  string id = 1;
+  string login = 2;
+  string name = 3;
+  string created_at = 4;
+  string updated_at = 5;
+}
+
+message SendMessageRequest {
+  string sender_id = 1;
+  string receiver_id = 2;
+  string message_content = 3;
+}
+
+message Message {
+  string id = 1;
+  string sender_id = 2;
+  string receiver_id = 3;
+  string message_content = 4;
+  string created_at = 5;
+  string updated_at = 6;
+}
+
+message MessageHistoryRequest {
+  string sender_id = 1;
+  string receiver_id = 2;
+}
+
+
+service UserService{
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+}
+
+service ChatService{
+  rpc SendMessage(SendMessageRequest) returns (Message);
+  rpc GetMessageHistory(MessageHistoryRequest) returns (stream Message);
+}
