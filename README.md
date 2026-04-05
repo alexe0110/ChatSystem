@@ -11,6 +11,12 @@ docker compose up -d
 goose -dir migrations postgres "postgresql://postgres:postgres@localhost:5432/chat_db?sslmode=disable" up
 ```
 
+Объявить энвы из файла
+
+```bash
+export $(grep -v '^#' .env | xargs)
+```
+
 Запуск
 ```bash
 go build ./cmd/rest/main.go
