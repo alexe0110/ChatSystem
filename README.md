@@ -19,10 +19,8 @@ export $(grep -v '^#' .env | xargs)
 
 Запуск
 ```bash
-go build ./cmd/rest/main.go
-./main
----
-go run main.go
+go run cmd/rest/main.go
+go run cmd/grpc/main.go
 ```
 
 Линтеры и форматеры
@@ -39,6 +37,7 @@ goose -dir migrations create create_users_and_messages sql
 
 ### Тестирование
 
+#### REST
 ```bash
 # 1. Регистрация
 curl -X POST http://localhost:8080/user/register \
@@ -67,4 +66,24 @@ curl http://localhost:8080/message/MESSAGE_UUID_HERE \
 # 6. Получить переписку
 curl "http://localhost:8080/message/conversation?sender_id=SENDER_UUID&receiver_id=RECEIVER_UUID" \
   -H "Authorization: Bearer TOKEN_HERE"
+```
+
+
+#### gRPC
+
+```bash
+### Получить инфу о пользователе
+GRPC localhost:50051/chat.UserService/GetUser
+
+{
+  "id": "185e2a36-da6c-44ec-b1ee-59d30bc3b948"
+}
+
+### Получить переписку двух пользователей
+GRPC localhost:50051/chat.ChatService/GetMessageHistory
+
+{
+ "receiver_id": "9f4eba7f-96ab-4b72-b584-8853e4655010",
+  "sender_id": "185e2a36-da6c-44ec-b1ee-59d30bc3b948"
+}
 ```
