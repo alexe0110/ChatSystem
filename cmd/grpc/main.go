@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 
+	"github.com/alexe0110/chat-system/internal/middleware"
 	"github.com/alexe0110/chat-system/internal/repository/postgres"
 	"github.com/alexe0110/chat-system/internal/service"
 	"github.com/alexe0110/chat-system/pb"
@@ -16,6 +17,8 @@ import (
 )
 
 func main() {
+	const secret = "qwerty"
+
 	pgDSN := os.Getenv("DATABASE_URL")
 	if pgDSN == "" {
 		log.Fatal("DATABASE_URL is not set")
@@ -27,7 +30,10 @@ func main() {
 	}
 	defer db.Close()
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(middleware.AuthInterceptor(secret)),
+		grpc.StreamInterceptor(middleware.AuthStreamInterceptor(secret)),
+	)
 
 	userRepo := postgres.NewUserRepository(db)
 	messageRepo := postgres.NewMessageRepository(db)
