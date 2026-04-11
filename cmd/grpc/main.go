@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 
+	"github.com/alexe0110/chat-system/internal/hub"
 	"github.com/alexe0110/chat-system/internal/middleware"
 	"github.com/alexe0110/chat-system/internal/repository/postgres"
 	"github.com/alexe0110/chat-system/internal/service"
@@ -41,8 +42,9 @@ func main() {
 	userService := service.NewUserService(userRepo)
 	messageService := service.NewMessageService(messageRepo)
 
+	chatHub := hub.NewHub()
 	userServiceServer := myGPRC.NewUserServiceServer(userService)
-	chatServiceServer := myGPRC.NewChatServiceServer(messageService)
+	chatServiceServer := myGPRC.NewChatServiceServer(messageService, chatHub)
 
 	pb.RegisterUserServiceServer(grpcServer, userServiceServer)
 	pb.RegisterChatServiceServer(grpcServer, chatServiceServer)

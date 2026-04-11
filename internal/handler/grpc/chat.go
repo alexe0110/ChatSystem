@@ -2,8 +2,11 @@ package grpc
 
 import (
 	"context"
+	"io"
+	"log"
 	"time"
 
+	"github.com/alexe0110/chat-system/internal/hub"
 	"github.com/alexe0110/chat-system/internal/service"
 	"github.com/alexe0110/chat-system/pb"
 	"github.com/google/uuid"
@@ -15,11 +18,13 @@ import (
 type ChatServiceServer struct {
 	pb.UnimplementedChatServiceServer
 	service *service.MessageService
+	hub     *hub.Hub
 }
 
-func NewChatServiceServer(service *service.MessageService) *ChatServiceServer {
+func NewChatServiceServer(service *service.MessageService, hub *hub.Hub) *ChatServiceServer {
 	return &ChatServiceServer{
 		service: service,
+		hub:     hub,
 	}
 }
 
@@ -83,4 +88,46 @@ func (s *ChatServiceServer) GetMessageHistory(
 	}
 	return nil
 
+}
+
+func (s *ChatServiceServer) Chat(stream grpc.BidiStreamingServer[pb.ChatMessage, pb.ChatMessage]) error {
+	req, err := stream.Recv()
+
+	if err != nil {
+		return status.Errorf(codes.Internal, "Error when get stream.Recv()")
+	}
+
+	userID, err := uuid.Parse(req.SenderId)
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, "invalid sender id")
+	}
+
+	ch := s.hub.Register(userID)
+	defer s.hub.Unregister(userID)
+
+	go func() {
+		for msg := range ch {
+			if err := stream.Send(msg); err != nil {
+				log.Print("Send error")
+			}
+		}
+	}()
+
+	for {
+		msg, err := stream.Recv()
+		if err == io.EOF {
+			return nil // клиент отключился
+		}
+		if err != nil {
+			return status.Errorf(codes.Internal, "recv error: %v", err)
+		}
+
+		receiverID, err := uuid.Parse(msg.ReceiverId)
+		if err != nil {
+			return status.Errorf(codes.InvalidArgument, "invalid receiver id")
+		}
+		if err := s.hub.Send(receiverID, msg); err != nil {
+			log.Printf("user %s not connected: %v", receiverID, err)
+		}
+	}
 }
