@@ -36,6 +36,12 @@ message MessageHistoryRequest {
   string receiver_id = 2;
 }
 
+message ChatMessage {
+  string sender_id = 1;
+  string receiver_id = 2;
+  string content = 3;
+  string timestamp = 4;
+}
 
 service UserService{
   rpc GetUser(GetUserRequest) returns (GetUserResponse);
@@ -44,4 +50,5 @@ service UserService{
 service ChatService{
   rpc SendMessage(SendMessageRequest) returns (Message);
   rpc GetMessageHistory(MessageHistoryRequest) returns (stream Message);
+  rpc Chat(stream ChatMessage) returns (stream ChatMessage);
 }

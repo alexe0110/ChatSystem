@@ -83,7 +83,7 @@ GRPC localhost:50051/chat.UserService/GetUser
 GRPC localhost:50051/chat.ChatService/GetMessageHistory
 
 {
- "receiver_id": "9f4eba7f-96ab-4b72-b584-8853e4655010",
+  "receiver_id": "9f4eba7f-96ab-4b72-b584-8853e4655010",
   "sender_id": "185e2a36-da6c-44ec-b1ee-59d30bc3b948"
 }
 ```
