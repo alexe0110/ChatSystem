@@ -124,7 +124,8 @@ func (s *ChatServiceServer) Chat(stream grpc.BidiStreamingServer[pb.ChatMessage,
 
 		receiverID, err := uuid.Parse(msg.ReceiverId)
 		if err != nil {
-			return status.Errorf(codes.InvalidArgument, "invalid receiver id")
+			log.Printf("invalid receiver id: %v", err)
+			continue
 		}
 		if err := s.hub.Send(receiverID, msg); err != nil {
 			log.Printf("user %s not connected: %v", receiverID, err)
