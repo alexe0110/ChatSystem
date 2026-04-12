@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"time"
@@ -131,4 +132,31 @@ func (s *ChatServiceServer) Chat(stream grpc.BidiStreamingServer[pb.ChatMessage,
 			log.Printf("user %s not connected: %v", receiverID, err)
 		}
 	}
+}
+
+func (s *ChatServiceServer) UploadFile(stream grpc.ClientStreamingServer[pb.FileChunk, pb.UploadResponse]) error {
+	var allData []byte
+	var fileName string
+
+	for {
+		chunk, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		if fileName == "" {
+			fileName = chunk.FileName
+		}
+
+		allData = append(allData, chunk.Data...)
+	}
+
+	return stream.SendAndClose(&pb.UploadResponse{
+		FileId: uuid.New().String(),
+		Url:    fmt.Sprintf("/files/%s", fileName),
+		Size:   int64(len(allData)),
+	})
 }

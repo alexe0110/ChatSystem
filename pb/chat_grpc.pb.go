@@ -124,6 +124,7 @@ const (
 	ChatService_SendMessage_FullMethodName       = "/chat.ChatService/SendMessage"
 	ChatService_GetMessageHistory_FullMethodName = "/chat.ChatService/GetMessageHistory"
 	ChatService_Chat_FullMethodName              = "/chat.ChatService/Chat"
+	ChatService_UploadFile_FullMethodName        = "/chat.ChatService/UploadFile"
 )
 
 // ChatServiceClient is the client API for ChatService service.
@@ -133,6 +134,7 @@ type ChatServiceClient interface {
 	SendMessage(ctx context.Context, in *SendMessageRequest, opts ...grpc.CallOption) (*Message, error)
 	GetMessageHistory(ctx context.Context, in *MessageHistoryRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Message], error)
 	Chat(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[ChatMessage, ChatMessage], error)
+	UploadFile(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[FileChunk, UploadResponse], error)
 }
 
 type chatServiceClient struct {
@@ -185,6 +187,19 @@ func (c *chatServiceClient) Chat(ctx context.Context, opts ...grpc.CallOption) (
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type ChatService_ChatClient = grpc.BidiStreamingClient[ChatMessage, ChatMessage]
 
+func (c *chatServiceClient) UploadFile(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[FileChunk, UploadResponse], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &ChatService_ServiceDesc.Streams[2], ChatService_UploadFile_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[FileChunk, UploadResponse]{ClientStream: stream}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type ChatService_UploadFileClient = grpc.ClientStreamingClient[FileChunk, UploadResponse]
+
 // ChatServiceServer is the server API for ChatService service.
 // All implementations must embed UnimplementedChatServiceServer
 // for forward compatibility.
@@ -192,6 +207,7 @@ type ChatServiceServer interface {
 	SendMessage(context.Context, *SendMessageRequest) (*Message, error)
 	GetMessageHistory(*MessageHistoryRequest, grpc.ServerStreamingServer[Message]) error
 	Chat(grpc.BidiStreamingServer[ChatMessage, ChatMessage]) error
+	UploadFile(grpc.ClientStreamingServer[FileChunk, UploadResponse]) error
 	mustEmbedUnimplementedChatServiceServer()
 }
 
@@ -210,6 +226,9 @@ func (UnimplementedChatServiceServer) GetMessageHistory(*MessageHistoryRequest, 
 }
 func (UnimplementedChatServiceServer) Chat(grpc.BidiStreamingServer[ChatMessage, ChatMessage]) error {
 	return status.Error(codes.Unimplemented, "method Chat not implemented")
+}
+func (UnimplementedChatServiceServer) UploadFile(grpc.ClientStreamingServer[FileChunk, UploadResponse]) error {
+	return status.Error(codes.Unimplemented, "method UploadFile not implemented")
 }
 func (UnimplementedChatServiceServer) mustEmbedUnimplementedChatServiceServer() {}
 func (UnimplementedChatServiceServer) testEmbeddedByValue()                     {}
@@ -268,6 +287,13 @@ func _ChatService_Chat_Handler(srv interface{}, stream grpc.ServerStream) error 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type ChatService_ChatServer = grpc.BidiStreamingServer[ChatMessage, ChatMessage]
 
+func _ChatService_UploadFile_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(ChatServiceServer).UploadFile(&grpc.GenericServerStream[FileChunk, UploadResponse]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type ChatService_UploadFileServer = grpc.ClientStreamingServer[FileChunk, UploadResponse]
+
 // ChatService_ServiceDesc is the grpc.ServiceDesc for ChatService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -290,6 +316,11 @@ var ChatService_ServiceDesc = grpc.ServiceDesc{
 			StreamName:    "Chat",
 			Handler:       _ChatService_Chat_Handler,
 			ServerStreams: true,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "UploadFile",
+			Handler:       _ChatService_UploadFile_Handler,
 			ClientStreams: true,
 		},
 	},
