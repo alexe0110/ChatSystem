@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"log"
 	"time"
@@ -10,6 +9,7 @@ import (
 	"github.com/alexe0110/chat-system/internal/hub"
 	"github.com/alexe0110/chat-system/internal/service"
 	"github.com/alexe0110/chat-system/pb"
+	"github.com/alexe0110/chat-system/pkg/storage"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -20,12 +20,14 @@ type ChatServiceServer struct {
 	pb.UnimplementedChatServiceServer
 	service *service.MessageService
 	hub     *hub.Hub
+	storage *storage.MinioStorage
 }
 
-func NewChatServiceServer(service *service.MessageService, hub *hub.Hub) *ChatServiceServer {
+func NewChatServiceServer(service *service.MessageService, hub *hub.Hub, storage *storage.MinioStorage) *ChatServiceServer {
 	return &ChatServiceServer{
 		service: service,
 		hub:     hub,
+		storage: storage,
 	}
 }
 
@@ -154,9 +156,14 @@ func (s *ChatServiceServer) UploadFile(stream grpc.ClientStreamingServer[pb.File
 		allData = append(allData, chunk.Data...)
 	}
 
+	url, err := s.storage.Upload(stream.Context(), fileName, allData)
+	if err != nil {
+		return status.Errorf(codes.Internal, "Upload failed: %v", err)
+	}
+
 	return stream.SendAndClose(&pb.UploadResponse{
 		FileId: uuid.New().String(),
-		Url:    fmt.Sprintf("/files/%s", fileName),
+		Url:    url,
 		Size:   int64(len(allData)),
 	})
 }
