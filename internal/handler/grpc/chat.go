@@ -2,10 +2,14 @@ package grpc
 
 import (
 	"context"
+	"io"
+	"log"
 	"time"
 
+	"github.com/alexe0110/chat-system/internal/hub"
 	"github.com/alexe0110/chat-system/internal/service"
 	"github.com/alexe0110/chat-system/pb"
+	"github.com/alexe0110/chat-system/pkg/storage"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -15,11 +19,15 @@ import (
 type ChatServiceServer struct {
 	pb.UnimplementedChatServiceServer
 	service *service.MessageService
+	hub     *hub.Hub
+	storage *storage.MinioStorage
 }
 
-func NewChatServiceServer(service *service.MessageService) *ChatServiceServer {
+func NewChatServiceServer(service *service.MessageService, hub *hub.Hub, storage *storage.MinioStorage) *ChatServiceServer {
 	return &ChatServiceServer{
 		service: service,
+		hub:     hub,
+		storage: storage,
 	}
 }
 
@@ -83,4 +91,79 @@ func (s *ChatServiceServer) GetMessageHistory(
 	}
 	return nil
 
+}
+
+func (s *ChatServiceServer) Chat(stream grpc.BidiStreamingServer[pb.ChatMessage, pb.ChatMessage]) error {
+	req, err := stream.Recv()
+
+	if err != nil {
+		return status.Errorf(codes.Internal, "Error when get stream.Recv()")
+	}
+
+	userID, err := uuid.Parse(req.SenderId)
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, "invalid sender id")
+	}
+
+	ch := s.hub.Register(userID)
+	defer s.hub.Unregister(userID)
+
+	go func() {
+		for msg := range ch {
+			if err := stream.Send(msg); err != nil {
+				log.Print("Send error")
+			}
+		}
+	}()
+
+	for {
+		msg, err := stream.Recv()
+		if err == io.EOF {
+			return nil // клиент отключился
+		}
+		if err != nil {
+			return status.Errorf(codes.Internal, "recv error: %v", err)
+		}
+
+		receiverID, err := uuid.Parse(msg.ReceiverId)
+		if err != nil {
+			log.Printf("invalid receiver id: %v", err)
+			continue
+		}
+		if err := s.hub.Send(receiverID, msg); err != nil {
+			log.Printf("user %s not connected: %v", receiverID, err)
+		}
+	}
+}
+
+func (s *ChatServiceServer) UploadFile(stream grpc.ClientStreamingServer[pb.FileChunk, pb.UploadResponse]) error {
+	var allData []byte
+	var fileName string
+
+	for {
+		chunk, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		if fileName == "" {
+			fileName = chunk.FileName
+		}
+
+		allData = append(allData, chunk.Data...)
+	}
+
+	url, err := s.storage.Upload(stream.Context(), fileName, allData)
+	if err != nil {
+		return status.Errorf(codes.Internal, "Upload failed: %v", err)
+	}
+
+	return stream.SendAndClose(&pb.UploadResponse{
+		FileId: uuid.New().String(),
+		Url:    url,
+		Size:   int64(len(allData)),
+	})
 }
