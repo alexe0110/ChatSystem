@@ -7,12 +7,12 @@ terraform {
 	}
 }
 provider "aws" {
-	region = "eu-central-1"
+	region = var.region
 }
 
 # ─── S3 ───────────────────────────────────────
 resource "aws_s3_bucket" "files" {
-	bucket = "chatsystem-files-tf-alexe0110"
+	bucket = "${var.project}-files-${var.environment}"
 }
 
 # ─── DynamoDB ─────────────────────────────────
