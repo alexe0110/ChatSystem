@@ -13,7 +13,8 @@ import (
 )
 
 func main() {
-	conn, err := grpc.Dial("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	fileName := "kek.png"
+	conn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -21,7 +22,7 @@ func main() {
 
 	client := pb.NewChatServiceClient(conn)
 
-	ctx := metadata.AppendToOutgoingContext(context.Background(), "authorization", "Bearer TOKEN_HERE")
+	ctx := metadata.AppendToOutgoingContext(context.Background(), "authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.")
 
 	// Открываем стрим
 	stream, err := client.UploadFile(ctx)
@@ -29,8 +30,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Читаем файл
-	data, err := os.ReadFile("test.txt") // создай любой файл
+	data, err := os.ReadFile(fileName)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -44,7 +44,7 @@ func main() {
 		}
 
 		err := stream.Send(&pb.FileChunk{
-			FileName: "test.txt",
+			FileName: fileName,
 			Data:     data[i:end],
 		})
 		if err != nil {
