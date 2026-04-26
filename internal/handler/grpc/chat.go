@@ -20,10 +20,10 @@ type ChatServiceServer struct {
 	pb.UnimplementedChatServiceServer
 	service *service.MessageService
 	hub     *hub.Hub
-	storage *storage.MinioStorage
+	storage storage.FileStorage
 }
 
-func NewChatServiceServer(service *service.MessageService, hub *hub.Hub, storage *storage.MinioStorage) *ChatServiceServer {
+func NewChatServiceServer(service *service.MessageService, hub *hub.Hub, storage storage.FileStorage) *ChatServiceServer {
 	return &ChatServiceServer{
 		service: service,
 		hub:     hub,

@@ -25,6 +25,9 @@ func main() {
 	minioEndpoint := os.Getenv("MINIO_ENDPOINT")
 	minioUser := os.Getenv("MINIO_USER")
 	minioPassword := os.Getenv("MINIO_PASSWORD")
+	storageType := os.Getenv("STORAGE_TYPE")
+	AWSRegion := os.Getenv("AWS_REGION")
+	bucketName := "chatsystem-files-dev"
 
 	if pgDSN == "" {
 		log.Fatal("DATABASE_URL is not set")
@@ -47,11 +50,16 @@ func main() {
 	userService := service.NewUserService(userRepo)
 	messageService := service.NewMessageService(messageRepo)
 
-	minioStorage := storage.NewMinioStorage(minioEndpoint, minioUser, minioPassword, "files")
+	var fileStorage storage.FileStorage
+	if storageType == "s3" {
+		fileStorage = storage.NewS3Storage(bucketName, AWSRegion)
+	} else {
+		fileStorage = storage.NewMinioStorage(minioEndpoint, minioUser, minioPassword, bucketName)
+	}
 
 	chatHub := hub.NewHub()
 	userServiceServer := myGPRC.NewUserServiceServer(userService)
-	chatServiceServer := myGPRC.NewChatServiceServer(messageService, chatHub, minioStorage)
+	chatServiceServer := myGPRC.NewChatServiceServer(messageService, chatHub, fileStorage)
 
 	pb.RegisterUserServiceServer(grpcServer, userServiceServer)
 	pb.RegisterChatServiceServer(grpcServer, chatServiceServer)
