@@ -25,6 +25,17 @@ resource "aws_dynamodb_table" "users" {
 		name = "user_id"
 		type = "S"
 	}
+
+	attribute {
+		name = "login"
+		type = "S"
+	}
+
+	global_secondary_index {
+		hash_key        = "login"
+		name            = "login-index"
+		projection_type = "ALL"
+	}
 }
 
 resource "aws_dynamodb_table" "messages" {
@@ -41,6 +52,17 @@ resource "aws_dynamodb_table" "messages" {
 	attribute {
 		name = "created_at"
 		type = "S"
+	}
+
+	attribute {
+		name = "message_id"
+		type = "S"
+	}
+
+	global_secondary_index {
+		hash_key        = "message_id"
+		name            = "message-id-index"
+		projection_type = "ALL"
 	}
 }
 
