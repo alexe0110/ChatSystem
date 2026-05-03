@@ -9,3 +9,7 @@ output "ecr_repository_url" {
 output "dynamodb_messages_table" {
   value = aws_dynamodb_table.messages.name
 }
+
+output "app_url" {
+  value = "http://${aws_lb.main.dns_name}"
+}

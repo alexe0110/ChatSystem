@@ -79,5 +79,8 @@ func main() {
 	messageRouter.GET("/conversation", messageHandler.GetConversation)
 	messageRouter.GET("/:id", messageHandler.GetByID)
 
+	serviceRouter := router.Group("")
+	serviceRouter.GET("/health")
+
 	_ = router.Run(":8080")
 }

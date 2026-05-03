@@ -72,3 +72,9 @@ resource "aws_ecr_repository" "chat_system" {
 	image_tag_mutability = "MUTABLE"
 	force_delete         = true        # чтобы terraform destroy удалил даже с образами внутри
 }
+
+
+# ─── ECS ──────────────────────────────────────
+resource "aws_ecs_cluster" "main" {
+	name = "${var.project}-cluster"
+}
