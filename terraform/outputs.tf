@@ -13,3 +13,7 @@ output "dynamodb_messages_table" {
 output "app_url" {
   value = "http://${aws_lb.main.dns_name}"
 }
+
+output "github_actions_role_arn" {
+  value = aws_iam_role.github_actions.arn
+}
