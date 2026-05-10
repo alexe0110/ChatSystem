@@ -8,30 +8,28 @@ Real-time чат на Go с деплоем в AWS через Terraform
 
 ```mermaid
 flowchart LR
-    Client([Клиент])
+    Dev["Developer"]
+    Client([Client])
 
-    subgraph AWS ["AWS eu-central-1"]
-        subgraph VPC ["VPC 10.0.0.0/16"]
-            ALB[ALB :80]
-            ECS[ECS Fargate :8080]
-            ALB --> ECS
+    subgraph AWS ["☁️ AWS - eu-central-1"]
+        subgraph VPC ["VPC - 10.0.0.0/16"]
+            subgraph ALB["ALB\n:80 → :8080"]
+            end
+            subgraph ECS["ECS Fargate\n0.25 vCPU - 512 MB"]
+            end
+            ALB -->|"SG: ALB → ECS"| ECS
         end
 
-        ECR[(ECR)]
-        DynamoDB[(DynamoDB)]
-        S3[(S3)]
-        CW[CloudWatch]
-
-        ECR -.->|pull| ECS
-        ECS --> DynamoDB
-        ECS --> S3
-        ECS -.->|logs| CW
+        ECS -->|"PutItem - Query"| DDB[(DynamoDB\nusers - messages)]
+        ECS -->|"PutObject"| S3[(S3\nchatsystem-files)]
+        ECS -->|logs| CW[CloudWatch\n/ecs/chatsystem]
+        ECR[(ECR\nchat-system)] -->|"pull image"| ECS
     end
 
     Client -->|HTTP| ALB
-    GHA[GitHub Actions] -->|OIDC + push| ECR
+    Dev -->|"docker push"| ECR
+    Dev -->|"terraform apply/destroy"| AWS
 ```
-
 ## Технологии
 
 | Слой        | Технология                                               |
