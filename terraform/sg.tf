@@ -1,4 +1,4 @@
-# SG для ALB — принимает HTTP из интернета.
+# SG для ALB — принимает HTTP из интернета
 resource "aws_security_group" "alb" {
   name   = "${var.project}-alb-sg"
   vpc_id = aws_vpc.main.id
