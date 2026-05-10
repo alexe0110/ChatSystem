@@ -45,11 +45,11 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
-      #5. Деплой — обновляем ECS-сервис. ⚠️ ВНИМАНИЕ: это платно (ALB + Fargate ~$0.03/час)
-      - name: Deploy to ECS
-        run: |
-         aws ecs update-service \
-           --cluster $ECS_CLUSTER \
-           --service $ECS_SERVICE \
-           --force-new-deployment \
-           --region $AWS_REGION
+      # Деплой — обновляем ECS-сервис. ⚠️ ВНИМАНИЕ: это платно (ALB + Fargate ~$0.03/час)
+#      - name: Deploy to ECS
+#        run: |
+#         aws ecs update-service \
+#           --cluster $ECS_CLUSTER \
+#           --service $ECS_SERVICE \
+#           --force-new-deployment \
+#           --region $AWS_REGION
